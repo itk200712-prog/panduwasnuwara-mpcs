@@ -1,0 +1,49 @@
+// ============================================================================
+// Business detail page — default template + special sections
+// ============================================================================
+
+import { notFound } from "next/navigation";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import {
+  BusinessContacts,
+  BusinessHero,
+  BusinessServices,
+  FuelPriceSection,
+  RegionalBranches,
+  RuralBankNetwork,
+} from "@/components/business-detail";
+import { getBusiness, getBusinesses, getFuelPrices } from "@/lib/data";
+
+export async function generateStaticParams() {
+  const businesses = await getBusinesses();
+  return businesses.map((b) => ({ slug: b.slug }));
+}
+
+export default async function BusinessDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const b = await getBusiness(slug);
+  if (!b || !b.active) notFound();
+  const prices = await getFuelPrices();
+
+  return (
+    <>
+      <SiteHeader />
+      <BusinessHero b={b} />
+
+      {/* Fuel Station — daily prices */}
+      {b.special === "fuel-station" && <FuelPriceSection prices={prices} />}
+
+      <BusinessServices b={b} />
+
+      {/* Rural Bank — 22 branch network */}
+      {b.special === "rural-bank" && <RuralBankNetwork />}
+
+      {/* Consumer — regional branches */}
+      {b.special === "consumer" && <RegionalBranches b={b} />}
+
+      <BusinessContacts b={b} />
+      <SiteFooter />
+    </>
+  );
+}

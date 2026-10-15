@@ -1,31 +1,28 @@
-import type { Metadata } from "next";
-import { PageHero } from "@/components/ui/page-hero";
-import { SectionHeading } from "@/components/ui/primitives";
-import { GalleryGrid } from "@/components/gallery/gallery-grid";
-import { CtaBanner } from "@/components/home/sections";
-import { getDict } from "@/lib/i18n";
-import { getLang } from "@/lib/get-lang";
+// Photo Gallery page — title + description සමඟ (user requirement)
+
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { GalleryGrid } from "@/components/gallery-grid";
 import { getGallery } from "@/lib/data";
 
-export const metadata: Metadata = { title: "Gallery" };
+export const metadata = { title: "Photo Gallery | Panduwasnuwara New MPCS" };
 
 export default async function GalleryPage() {
-  const lang = await getLang();
-  const t = getDict(lang);
   const items = await getGallery();
-
   return (
     <>
-      <PageHero badge={t.gallery.badge} title={t.gallery.title} text={t.gallery.subtitle} />
-
-      <section className="bg-slate-50 py-20">
-        <div className="container-page">
-          <SectionHeading badge={t.nav.gallery} title={t.gallery.title} text={t.gallery.subtitle} />
-          <GalleryGrid items={items} />
+      <SiteHeader />
+      <section className="hero-dark text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
+          <div className="section-badge !text-amber-300">Photo Gallery</div>
+          <h1 className="mt-3 text-3xl sm:text-5xl font-black">ඡායාරූප ගැලරිය</h1>
+          <p className="mt-3 text-slate-300 max-w-2xl">සමිතියේ වැඩසටහන් සහ අවස්ථා ඡායාරූප — Photo Gallery</p>
         </div>
       </section>
-
-      <CtaBanner />
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <GalleryGrid items={items} />
+      </section>
+      <SiteFooter />
     </>
   );
 }

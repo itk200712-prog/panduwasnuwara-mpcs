@@ -1,5 +1,5 @@
 {
-  "name": "sri-samrudhi-coop",
+  "name": "panduwasnuwara-mpcs-web",
   "version": "1.0.0",
   "private": true,
   "description": "Sri Samrudhi Cooperative Society - Full-stack website (Next.js + Tailwind + Supabase)",
@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "tsx scripts/test.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

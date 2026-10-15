@@ -4,9 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 // ============================================================================
-//  Session refresh + route protection
-//  /portal  -> login වූ සාමාජිකයින්ට
-//  /admin   -> admin භූමිකාව ඇති අයට
+//  Session refresh + admin route protection
+//  /admin  -> login වූ admin / superadmin භූමිකාව ඇති අයට පමණයි
 // ============================================================================
 
 export async function middleware(request: NextRequest) {
@@ -15,7 +14,7 @@ export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Supabase වින්‍යාස නොමැතිව dev preview වැඩ කරන්න දෙන්න
+  // Supabase වින්‍යාස නොමැතිව demo preview එක වැඩ කරන්න දෙන්න
   if (!url || !anon) return response;
 
   const supabase = createServerClient(url, anon, {
@@ -39,25 +38,24 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const needsAuth = pathname.startsWith("/portal") || pathname.startsWith("/admin");
 
-  if (needsAuth && !user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(redirectUrl);
-  }
+  if (pathname.startsWith("/admin")) {
+    if (!user) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/signin";
+      redirectUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
 
-  if (pathname.startsWith("/admin") && user) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (profile?.role !== "admin" && profile?.role !== "officer") {
+    if (profile?.role !== "admin" && profile?.role !== "superadmin") {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/portal";
+      redirectUrl.pathname = "/";
       return NextResponse.redirect(redirectUrl);
     }
   }

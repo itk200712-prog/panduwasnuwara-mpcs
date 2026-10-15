@@ -1,26 +1,201 @@
-import type { Metadata } from "next";
-import { MessageSquare } from "lucide-react";
-import { EmptyState } from "@/components/ui/primitives";
-import { MessagesList } from "@/components/admin/messages-list";
-import { getAdminMessages } from "@/lib/data";
-import { getDict } from "@/lib/i18n";
-import { getLang } from "@/lib/get-lang";
+"use client";
 
-export const metadata: Metadata = { title: "Manage Messages" };
+// ============================================================================
+// Messages & Inquiries — business categories + status + Reply option
+// ============================================================================
 
-export default async function AdminMessagesPage() {
-  const lang = await getLang();
-  const t = getDict(lang);
-  const messages = await getAdminMessages();
+import { useMemo, useState } from "react";
+import { Building2, Mail, RefreshCw, Reply, Search, Send } from "lucide-react";
+import { AdminTopbar, dbUpdate, useNotice } from "@/components/admin";
+
+type Msg = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  department: string;
+  message: string;
+  status: "unread" | "read" | "replied";
+  reply: string;
+  ago: string;
+};
+
+const SEED: Msg[] = [
+  {
+    id: "m1",
+    name: "INDUWARA",
+    phone: "076 424 7716",
+    email: "induwara@gmail.com",
+    department: "General Society Inquiries",
+    message: "සිංහල පරීක්ෂණය - පණිවුඩය පරීක්ෂණය / EFWERGFREG",
+    status: "unread",
+    reply: "",
+    ago: "23h ago",
+  },
+];
+
+const DEPTS = [
+  "All Messages",
+  "Rural Bank",
+  "Consumer Section",
+  "Fuel Station",
+  "Maliban Biscuits Agency",
+  "Maliban Milk Agency",
+  "Nature's Secrets Agency",
+  "Hemas Agency",
+  "Ristbury Tiara Agency",
+  "Funeral Services Section",
+  "Co-op City Supermarket",
+  "General Society Inquiries",
+];
+
+const STATUS = ["all", "unread", "read", "replied"] as const;
+
+export default function AdminMessagesPage() {
+  const { show, node } = useNotice();
+  const [msgs, setMsgs] = useState<Msg[]>(SEED);
+  const [dept, setDept] = useState("All Messages");
+  const [status, setStatus] = useState<(typeof STATUS)[number]>("all");
+  const [q, setQ] = useState("");
+  const [replyFor, setReplyFor] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    return msgs.filter(
+      (m) =>
+        (dept === "All Messages" || m.department === dept) &&
+        (status === "all" || m.status === status) &&
+        (!s || m.name.toLowerCase().includes(s) || m.message.toLowerCase().includes(s) || m.phone.includes(s))
+    );
+  }, [msgs, dept, status, q]);
+
+  async function sendReply(m: Msg, text: string) {
+    setMsgs((xs) => xs.map((x) => (x.id === m.id ? { ...x, status: "replied", reply: text } : x)));
+    const err = await dbUpdate("messages", { id: m.id }, { status: "replied", reply: text });
+    setReplyFor(null);
+    show(err ? `⚠ ${err}` : "✅ Reply sent — status: Replied");
+  }
 
   return (
     <div>
-      <h2 className="mb-6 text-xl font-bold text-navy-900">{t.admin.manageMessages}</h2>
-      {messages.length === 0 ? (
-        <EmptyState icon={MessageSquare} title={t.common.empty} />
-      ) : (
-        <MessagesList messages={messages} />
-      )}
+      <AdminTopbar title="Messages & Inquiries" sub="Review and manage member records, moderate gallery discussions, and configure communication preferences." />
+      {node}
+
+      <div className="card p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2.5">
+              <Mail size={20} className="text-indigo-700" /> Customer Inquiries &amp; Messages
+            </h2>
+            <p className="text-slate-500 text-[12px] mt-1">
+              Incoming inquiries routed from business pages categorized by department
+            </p>
+          </div>
+          <div className="relative w-full sm:w-80">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} className="field !pl-10" placeholder="Search inquiries by sender, subject, or phone..." />
+          </div>
+        </div>
+
+        {/* business category tabs (scrollable) */}
+        <div className="scroll-x mt-5 pb-1">
+          <div className="flex gap-2 min-w-max">
+            {DEPTS.map((d) => {
+              const count = msgs.filter((m) => d === "All Messages" || m.department === d).length;
+              return (
+                <button
+                  key={d}
+                  onClick={() => setDept(d)}
+                  className={`rounded-full px-4 py-2 text-[11.5px] font-bold border whitespace-nowrap ${
+                    dept === d ? "bg-indigo-700 text-white border-indigo-700" : "bg-white text-slate-600 border-slate-200"
+                  }`}
+                >
+                  {d} <span className="opacity-70">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* status tabs */}
+        <div className="flex flex-wrap items-center gap-2 mt-4">
+          <span className="text-[10.5px] font-bold tracking-[0.16em] text-slate-400">STATUS:</span>
+          {STATUS.map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatus(s)}
+              className={`rounded-full px-3.5 py-1.5 text-[11px] font-bold border ${
+                status === s ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200"
+              }`}
+            >
+              {s[0].toUpperCase() + s.slice(1)} {s === "all" ? msgs.length : msgs.filter((m) => m.status === s).length}
+            </button>
+          ))}
+          <button className="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center ml-1" onClick={() => show("Refreshed")}>
+            <RefreshCw size={13} />
+          </button>
+        </div>
+      </div>
+
+      {/* messages list */}
+      <div className="mt-5 space-y-4">
+        {filtered.length === 0 ? (
+          <div className="card py-16 text-center">
+            <Mail size={40} className="mx-auto text-slate-300" />
+            <div className="text-slate-600 font-bold text-[15px] mt-3">No inquiries found for this category.</div>
+            <div className="text-slate-400 text-[12px]">Messages submitted by customers and members will appear here automatically.</div>
+          </div>
+        ) : (
+          filtered.map((m) => (
+            <div key={m.id} className="card p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-extrabold text-slate-900 text-[14px]">{m.name}</span>
+                    <span className="badge-amber rounded-full px-2 py-0.5 text-[9.5px] font-bold">{m.department}</span>
+                    {m.status === "unread" && <span className="badge-red rounded-full px-2 py-0.5 text-[9.5px] font-bold">Unread</span>}
+                    {m.status === "replied" && <span className="badge-green rounded-full px-2 py-0.5 text-[9.5px] font-bold">Replied</span>}
+                  </div>
+                  <div className="text-slate-500 text-[11.5px] mt-1">
+                    📞 {m.phone} · ✉ {m.email}
+                  </div>
+                  <div className="text-slate-700 text-[12.5px] mt-2">{m.message}</div>
+                  {m.reply && (
+                    <div className="mt-2.5 rounded-xl bg-emerald-50 border border-emerald-100 px-3.5 py-2.5 text-[12px] text-emerald-900">
+                      <strong>Reply:</strong> {m.reply}
+                    </div>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-slate-400 text-[10.5px]">{m.ago}</div>
+                  <button className="btn btn-primary !py-1.5 !px-3.5 !text-[11.5px] mt-2" onClick={() => setReplyFor(replyFor === m.id ? null : m.id)}>
+                    <Reply size={13} /> Reply
+                  </button>
+                </div>
+              </div>
+              {replyFor === m.id && (
+                <form
+                  className="mt-4 flex gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const text = (new FormData(e.currentTarget).get("reply") as string) || "";
+                    if (text.trim()) sendReply(m, text.trim());
+                  }}
+                >
+                  <input name="reply" className="field" placeholder="Type your reply to the customer..." autoFocus />
+                  <button type="submit" className="btn btn-primary shrink-0">
+                    <Send size={15} /> Send
+                  </button>
+                </form>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="mt-5 text-[11px] text-slate-400 flex items-center gap-1.5">
+        <Building2 size={12} /> Business "Send Inquiry" forms route here — replies update status to Replied. Notification email is set in System Settings.
+      </div>
     </div>
   );
 }

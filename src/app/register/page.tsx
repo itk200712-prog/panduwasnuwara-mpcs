@@ -1,170 +1,111 @@
 "use client";
 
-import { useState } from "react";
+// ============================================================================
+// Register — Create Member Account (NIC-based)
+// ============================================================================
+
 import Link from "next/link";
-import { UserPlus, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { useLang } from "@/context/language-context";
-import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/primitives";
-import { Logo } from "@/components/ui/logo";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useState } from "react";
+import { ArrowLeft, Eye, EyeOff, UserPlus } from "lucide-react";
+import { useLang } from "@/lib/i18n";
+import { registerMember } from "@/lib/auth";
 
 export default function RegisterPage() {
   const { t } = useLang();
-  const [form, setForm] = useState({
-    full_name_si: "",
-    full_name_en: "",
-    nic: "",
-    phone: "",
-    email: "",
-    password: "",
-    confirm: "",
-  });
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
 
-  function update(key: keyof typeof form, value: string) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setStatus("loading");
-    setErrorMsg("");
-
-    if (form.password !== form.confirm) {
-      setStatus("error");
-      setErrorMsg(t.auth.passwordMismatch);
+    setError("");
+    const fd = new FormData(e.currentTarget);
+    const password = String(fd.get("password"));
+    const confirm = String(fd.get("confirm"));
+    if (password !== confirm) {
+      setError("Passwords do not match / මුරපද නොගැලපේ");
       return;
     }
-
-    if (!isSupabaseConfigured()) {
-      setStatus("error");
-      setErrorMsg("Supabase සම්බන්ධ කර නොමැත. .env.local සකසන්න.");
+    if (password.length < 5) {
+      setError("Password must be at least 5 characters / මුරපදය අකුරු 5කට වැඩි විය යුතුය");
       return;
     }
-
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            full_name_si: form.full_name_si,
-            full_name_en: form.full_name_en || form.full_name_si,
-            nic: form.nic,
-            phone: form.phone,
-          },
-        },
-      });
-      if (error) throw error;
-      setStatus("success");
-    } catch (err) {
-      setStatus("error");
-      setErrorMsg(err instanceof Error ? err.message : t.common.error);
+    setBusy(true);
+    const { error: err } = await registerMember({
+      full_name: String(fd.get("full_name")),
+      nic: String(fd.get("nic")),
+      phone: String(fd.get("phone")),
+      password,
+    });
+    setBusy(false);
+    if (err) {
+      setError(err);
+      return;
     }
+    setDone(true);
   }
 
   return (
-    <div className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-navy-950 px-4 py-16">
-      <div className="page-hero-pattern absolute inset-0" />
-      <div className="absolute -left-24 top-0 h-96 w-96 rounded-full bg-brand-600/20 blur-3xl" />
-      <div className="absolute -right-24 bottom-0 h-96 w-96 rounded-full bg-gold-500/15 blur-3xl" />
-
-      <div className="relative w-full max-w-2xl animate-fade-up">
-        <div className="mb-8 text-center">
-          <div className="mb-6 inline-flex">
-            <Logo light />
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+      <div className="card w-full max-w-md p-8 sm:p-10">
+        <Link href="/" className="inline-flex items-center gap-2 text-slate-500 text-[13px] font-semibold hover:text-slate-800">
+          <ArrowLeft size={15} /> {t.auth.backHome}
+        </Link>
+        <div className="flex flex-col items-center mt-4">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center">
+            <UserPlus size={24} />
           </div>
-          <h1 className="text-3xl font-extrabold text-white">{t.auth.registerTitle}</h1>
-          <p className="mt-2 text-white/70">{t.auth.registerSubtitle}</p>
+          <h1 className="mt-4 text-3xl font-extrabold text-slate-900">{t.auth.registerTitle}</h1>
+          <p className="text-slate-500 text-[13px] mt-1.5 text-center">{t.auth.registerSub}</p>
         </div>
 
-        <div className="rounded-3xl bg-white p-8 shadow-2xl">
-          {status === "success" ? (
-            <div className="flex flex-col items-center gap-4 py-8 text-center">
-              <CheckCircle2 className="h-16 w-16 text-brand-600" />
-              <p className="text-lg font-bold text-navy-900">{t.auth.registerSuccess}</p>
-              <p className="max-w-sm text-sm text-slate-600">{t.auth.registerNote}</p>
-              <Link href="/login" className="mt-2">
-                <Button variant="primary">{t.auth.submitLogin}</Button>
-              </Link>
+        {done ? (
+          <div className="mt-8 rounded-2xl bg-emerald-50 border border-emerald-200 p-6 text-center">
+            <div className="font-bold text-emerald-800">Registration successful! / ලියාපදිංචිය සාර්ථකයි!</div>
+            <Link href="/signin" className="btn btn-primary mt-4 w-full">
+              {t.auth.signinBtn}
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="mt-8 space-y-4">
+            <div>
+              <label className="field-label">{t.auth.fullname} *</label>
+              <input name="full_name" required className="field" placeholder="e.g. Induwara Perera" />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {status === "error" && (
-                <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-                  {errorMsg}
-                </div>
-              )}
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label={t.common.name + " (සිංහල)"} required>
-                  <Input required value={form.full_name_si} onChange={(e) => update("full_name_si", e.target.value)} />
-                </Field>
-                <Field label={t.common.name + " (English)"}>
-                  <Input value={form.full_name_en} onChange={(e) => update("full_name_en", e.target.value)} />
-                </Field>
-                <Field label={t.auth.nic} required>
-                  <Input required value={form.nic} onChange={(e) => update("nic", e.target.value)} placeholder="123456789V" />
-                </Field>
-                <Field label={t.common.phone} required>
-                  <Input required value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="077 123 4567" />
-                </Field>
+            <div>
+              <label className="field-label">{t.auth.nic} *</label>
+              <input name="nic" required className="field" placeholder="E.G. 200478922123 OR 851234567V" />
+            </div>
+            <div>
+              <label className="field-label">{t.auth.phone} *</label>
+              <input name="phone" required className="field" placeholder="07X XXXXXXX" />
+            </div>
+            <div>
+              <label className="field-label">{t.auth.password} *</label>
+              <div className="relative">
+                <input name="password" required type={show ? "text" : "password"} className="field !pr-11" placeholder="••••••••" />
+                <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" onClick={() => setShow(!show)}>
+                  {show ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
               </div>
+            </div>
+            <div>
+              <label className="field-label">{t.auth.confirm} *</label>
+              <input name="confirm" required type={show ? "text" : "password"} className="field" placeholder="••••••••" />
+            </div>
+            {error && <div className="rounded-xl bg-red-50 border border-red-200 text-red-700 text-[12.5px] px-4 py-2.5">{error}</div>}
+            <button type="submit" disabled={busy} className="btn btn-primary w-full">
+              {busy ? "..." : t.auth.registerBtn}
+            </button>
+          </form>
+        )}
 
-              <Field label={t.common.email} required>
-                <Input required type="email" autoComplete="email" value={form.email} onChange={(e) => update("email", e.target.value)} />
-              </Field>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label={t.auth.password} required>
-                  <Input
-                    required
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={6}
-                    value={form.password}
-                    onChange={(e) => update("password", e.target.value)}
-                  />
-                </Field>
-                <Field label={t.auth.confirmPassword} required>
-                  <Input
-                    required
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={6}
-                    value={form.confirm}
-                    onChange={(e) => update("confirm", e.target.value)}
-                  />
-                </Field>
-              </div>
-
-              <p className="rounded-xl border border-brand-100 bg-brand-50 p-4 text-xs text-brand-800">
-                {t.auth.registerNote}
-              </p>
-
-              <Button type="submit" loading={status === "loading"} size="lg" className="w-full">
-                <UserPlus className="h-5 w-5" />
-                {t.auth.submitRegister}
-              </Button>
-
-              <p className="text-center text-sm text-slate-600">
-                {t.auth.haveAccount}{" "}
-                <Link href="/login" className="font-bold text-brand-700 hover:underline">
-                  {t.nav.login}
-                </Link>
-              </p>
-            </form>
-          )}
-        </div>
-
-        <div className="mt-6 flex items-center justify-center gap-2 text-xs text-white/50">
-          <ShieldCheck className="h-4 w-4 text-gold-400" />
-          Supabase Secure Authentication
+        <div className="mt-6 text-center text-[13px] text-slate-500">
+          {t.auth.haveAccount}{" "}
+          <Link href="/signin" className="text-indigo-700 font-bold hover:underline">
+            {t.auth.signinHere}
+          </Link>
         </div>
       </div>
     </div>

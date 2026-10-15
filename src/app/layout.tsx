@@ -1,57 +1,23 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Noto_Sans_Sinhala } from "next/font/google";
-import { LanguageProvider } from "@/context/language-context";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-import { getDict } from "@/lib/i18n";
-import { getLang } from "@/lib/get-lang";
-import { getSettings } from "@/lib/data";
+import { cookies } from "next/headers";
 import "./globals.css";
+import { LanguageProvider } from "@/lib/i18n";
+import type { Lang } from "@/lib/types";
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-jakarta",
-  display: "swap",
-});
-
-const sinhala = Noto_Sans_Sinhala({
-  subsets: ["sinhala"],
-  variable: "--font-sinhala",
-  display: "swap",
-});
-
-export const dynamic = "force-dynamic";
-
-export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSettings();
-  return {
-    title: {
-      default: `${settings.name_en} | ${settings.name_si}`,
-      template: `%s | ${settings.name_en}`,
-    },
-    description: settings.tagline_en,
-    keywords: ["cooperative", "samrudhi", "co-op", "sri lanka", "savings", "loans", "සමූපකාර"],
-  };
-}
+export const metadata: Metadata = {
+  title: "පඳුවස්නුවර නව බහු අරමුණු සමූපකාර සමිතිය | Panduwasnuwara New MPCS",
+  description:
+    "Panduwasnuwara New Multi Purpose Co-Operative Society LTD — rural banking, consumer goods, product agencies and fuel supply under one roof.",
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const lang = await getLang();
-  const settings = await getSettings();
-
+  const cookieStore = await cookies();
+  const raw = cookieStore.get("lang")?.value;
+  const lang: Lang = raw === "en" ? "en" : "si";
   return (
     <html lang={lang}>
-      <body className={`${jakarta.variable} ${sinhala.variable} font-sans`}>
-        <LanguageProvider lang={lang}>
-          <Header
-            phone={settings.phone}
-            email={settings.email}
-            facebook={settings.facebook}
-            youtube={settings.youtube}
-            instagram={settings.instagram}
-          />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-        </LanguageProvider>
+      <body>
+        <LanguageProvider initialLang={lang}>{children}</LanguageProvider>
       </body>
     </html>
   );
