@@ -8,10 +8,10 @@
 
 1. https://supabase.com → sign in → **New Project** (හෝ දැනට ඇති project එක භාවිතා කරන්න — ref: `rayxoujhocvfzlzufdtm`)
 2. වම් පස **SQL Editor** → **New query**
-3. `supabase/schema.sql` file එකේ මුළු අන්තර්ගතයම copy කර paste කර **Run** කරන්න
-4. නැවත **New query** එකක් → `supabase/seed.sql` file එකේ මුළු අන්තර්ගතයම copy කර paste කර **Run** කරන්න
-5. **Authentication → Providers → Email** → "Confirm email" **OFF** කරන්න (NIC login සඳහා අවශ්‍යයි)
-6. **Settings → API** වලින් මේ දෙක copy කරගන්න:
+3. **`supabase/schema.sql`** file එකේ මුළු අන්තර්ගතයම copy කර paste කර **Run** කරන්න
+   (එකම SQL file එකයි — tables + සියලු දත්ත + image storage ඔක්කොම ඇතුළත්)
+4. **Authentication → Providers → Email** → "Confirm email" **OFF** කරන්න (NIC login සඳහා අවශ්‍යයි)
+5. **Settings → API** වලින් මේ දෙක copy කරගන්න:
    - Project URL
    - anon public key
 
@@ -51,14 +51,21 @@ git push -u origin main
 4. **Deploy** ඔබන්න
 5. Deploy වූ පසු https://ඔබේ-වෙබ්-අඩවිය.vercel.app ලිපිනයෙන් පිවිසෙන්න
 
-## පියවර 5 — FormSubmit සක්‍රීය කිරීම (Contact Form)
+## පියවර 5 — Hero Background Images (upload/delete)
+
+**Admin → System Settings → Hero Background Images** එකෙන්:
+- **⬆ Upload Image** — ඔබේ computer එකෙන් image එකක් ඇතුළත් කරන්න (Supabase Storage එකට upload වේ)
+- 🗑️ delete කළ විට upload කළ image එක storage එකෙනුත් ඉවත් වේ
+- ↑ ↓ පිළිවෙල වෙනස් කරන්න · උපරිම images 10ක් · **Save Settings** ඔබන්න
+
+## පියවර 6 — FormSubmit සක්‍රීය කිරීම (Contact Form)
 
 1. `/contact` පිටුවෙන් පරීක්ෂණ පණිවුඩයක් යවන්න
 2. `itk200712@gmail.com` inbox එකට **"Activate Form"** ලිපියක් එයි — එහි ඇති link එක click කරන්න (එක වරක් පමණයි)
 3. ඉන් පසු හැම පණිවුඩයක්ම එම විද්‍යුත් තැපෑලට යයි
 4. විද්‍යුත් තැපෑල වෙනස් කරන්නේ **Admin → System Settings → Contact Form Submission Emails** එකෙන්
 
-## පියවර 6 — WhatsApp Password Recovery
+## පියවර 7 — WhatsApp Password Recovery
 
 Admin → System Settings → **Password Reset WhatsApp Number** → `94742352670` (දැනටමත් ඇත).
 "Forgot Password?" click කළ විට member කෙනෙකුගේ විස්තර සමඟ WhatsApp message එකක් මෙම අංකයට සැකසේ.

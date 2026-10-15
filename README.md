@@ -42,11 +42,11 @@ Supabase නැතිව වුණත් site එක වැඩ කරයි (see
 7. **Gallery** — title + description හැම විටම පෙනේ
 8. **Send Inquiry** → admin → Messages & Inquiries (business tabs + Unread/Read/Replied + Reply)
 9. **Services (N) badge** → Division Offered Services tab එකට pre-select වේ
+10. **Hero slideshow** — images 5ක්+ auto-change (animation) · admin එකෙන් **upload/delete** කරන්න පුළුවන්
 
 ## Database (SQL — වෙන වෙනම)
 
-- `supabase/schema.sql` — tables 17ක් + `login_lookup` view + `protect_role_change` trigger
-- `supabase/seed.sql` — screenshots වල සියලු දත්ත + superadmin ගිණුම
+- `supabase/schema.sql` — **එකම SQL file එක**: tables 17ක් + views/triggers + screenshots වල සියලු දත්ත + image storage (පැරණි සමිති දත්ත නැත)
 
 **Login (SQL run කළාට පස්සේ):**
 | භූමිකාව | NIC | Password |

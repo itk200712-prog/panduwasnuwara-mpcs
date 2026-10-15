@@ -5,8 +5,9 @@
 // ============================================================================
 
 import { useState } from "react";
-import { Check, Image as ImageIcon, Mail, MessageCircle, Plus, RefreshCw, Save, Settings, Trash2 } from "lucide-react";
+import { Check, Image as ImageIcon, Mail, MessageCircle, Plus, RefreshCw, Save, Settings, Trash2, Upload } from "lucide-react";
 import { AdminTopbar, dbUpdate, useNotice } from "@/components/admin";
+import { deleteSiteImage, uploadSiteImage } from "@/lib/supabase/storage";
 import { SETTINGS } from "@/lib/seed";
 
 export default function AdminSettingsPage() {
@@ -120,7 +121,12 @@ export default function AdminSettingsPage() {
                   <button
                     type="button"
                     className="w-8 h-8 rounded-lg border border-red-200 bg-white text-red-600 flex items-center justify-center"
-                    onClick={() => setHeroImages((xs) => xs.filter((_, j) => j !== i))}
+                    onClick={async () => {
+                      const src = heroImages[i];
+                      setHeroImages((xs) => xs.filter((_, j) => j !== i));
+                      await deleteSiteImage(src); // upload කළ image එකක් නම් storage එකෙනුත් මකයි
+                      show("✅ Hero image එක ඉවත් කළා");
+                    }}
                     aria-label="Delete"
                   >
                     <Trash2 size={14} />
@@ -131,6 +137,30 @@ export default function AdminSettingsPage() {
           </div>
 
           <div className="flex flex-wrap gap-2.5 mt-4">
+            <label className="btn btn-outline cursor-pointer">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  if (heroImages.length >= 10) {
+                    show("⚠ Hero images උපරිම 10ක් දක්වායි");
+                    return;
+                  }
+                  const { url, error } = await uploadSiteImage(file, "hero");
+                  if (error) {
+                    show(`⚠ ${error}`);
+                    return;
+                  }
+                  setHeroImages((xs) => [...xs, url!]);
+                  show("✅ Image එක upload කළා — Save Settings ඔබන්න");
+                }}
+              />
+              <Upload size={15} /> Upload Image
+            </label>
             <input
               value={newImg}
               onChange={(e) => setNewImg(e.target.value)}
@@ -150,9 +180,9 @@ export default function AdminSettingsPage() {
           </div>
 
           <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-[11.5px] text-amber-900 mt-4">
-            💡 ඡායාරූප උඩුගත කිරීමට: <strong>/public/images/hero/</strong> folder එකට image එක දාලා උඩ path එක ලියන්න
-            (උදා: <code>/images/hero/hero-6.jpg</code>). Slideshow එක තත්පර 6කට වරක් crossfade + zoom animation
-            එකක් සමඟ මාරු වේ.
+            💡 <strong>Upload Image</strong> එකෙන් ඔබේ computer එකෙන් image එකක් ඇතුළත් කරන්න (Supabase Storage — admin පමණයි).
+            🗑️ delete කළ විට upload කළ image එක storage එකෙනුත් ඉවත් වේ. Slideshow එක තත්පර 6කට වරක් crossfade + zoom
+            animation එකක් සමඟ මාරු වේ (උපරිම images 10ක්).
           </div>
         </section>
 

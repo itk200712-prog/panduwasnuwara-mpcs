@@ -3,7 +3,7 @@
 //  ක්‍රියා කරවන්න: npm test   (npx tsx scripts/test.ts)
 // ============================================================================
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "..");
@@ -91,7 +91,12 @@ ok("Fuel Station: Priority Queue for Members", fuelSvc.includes("Priority Queue 
 
 console.log("\n── 10) SQL files (separate schema + seed) ──");
 const schema = readFileSync(join(root, "supabase/schema.sql"), "utf8");
-const seedSql = readFileSync(join(root, "supabase/seed.sql"), "utf8");
+const seedSql = schema; // එකම SQL file එකේ schema + data + storage ඔක්කොම
+ok("supabase/ එකේ SQL file එකයි",
+  readdirSync(join(root, "supabase")).filter((f) => f.endsWith(".sql")).length === 1,
+  readdirSync(join(root, "supabase")).filter((f) => f.endsWith(".sql")).join(","));
+ok("SQL එකේ පැරණි සමිති දත්ත නැත", !schema.toLowerCase().includes("samrudhi"));
+ok("SQL එකේ image storage bucket", schema.includes("site-images") && schema.includes("storage.buckets"));
 for (const t of ["profiles", "login_lookup", "business_units", "business_services", "business_contacts",
   "business_branches", "board_members", "news", "gallery_items", "gallery_comments", "messages",
   "membership_applications", "member_rows", "voter_rows", "data_files", "fuel_prices", "system_settings",
