@@ -16,6 +16,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const lang: Lang = raw === "en" ? "en" : "si";
   return (
     <html lang={lang}>
+      <head>
+        {/* ss වල භාවිතා කළ font එක පමණයි: Poppins (Latin) + Noto Sans Sinhala (සිංහල) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
         <LanguageProvider initialLang={lang}>{children}</LanguageProvider>
       </body>

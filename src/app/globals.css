@@ -25,7 +25,8 @@ html {
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: "Noto Sans Sinhala", "Iskoola Pota", "Segoe UI", system-ui, -apple-system, sans-serif;
+  /* ss වල භාවිතා කළ font — Poppins (Latin) + Noto Sans Sinhala (සිංහල) */
+  font-family: "Poppins", "Noto Sans Sinhala", "Iskoola Pota", sans-serif;
 }
 
 /* Section badge: │ LABEL */
@@ -67,6 +68,80 @@ body {
     radial-gradient(1200px 500px at 80% -10%, rgba(59, 91, 219, 0.35), transparent 60%),
     radial-gradient(900px 420px at 10% 110%, rgba(217, 119, 6, 0.18), transparent 55%),
     linear-gradient(135deg, #0b1230 0%, #172554 55%, #1e2a78 100%);
+}
+
+/* ---- Hero background slideshow (admin settings images 5+ auto-change) ---- */
+.hero-slideshow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.25s ease;
+}
+.hero-slide.is-active {
+  opacity: 1;
+  z-index: 10;
+}
+.hero-slide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transform: scale(1.02);
+}
+.hero-slide.is-active .hero-slide-img {
+  animation: heroKen 11s ease-out forwards;
+}
+@keyframes heroKen {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.13); }
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background:
+    linear-gradient(105deg, rgba(11, 18, 48, 0.93) 0%, rgba(23, 37, 84, 0.8) 45%, rgba(30, 42, 120, 0.5) 72%, rgba(15, 23, 42, 0.42) 100%),
+    linear-gradient(to top, rgba(11, 18, 48, 0.55), transparent 38%);
+}
+.hero-dots {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.35rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 30;
+}
+.hero-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: all 0.35s ease;
+  padding: 0;
+}
+.hero-dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+.hero-dot.is-active {
+  background: #fbbf24;
+  border-color: #fbbf24;
+  width: 28px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide {
+    transition: none;
+  }
+  .hero-slide.is-active .hero-slide-img {
+    animation: none;
+    transform: none;
+  }
 }
 
 .footer-strip {

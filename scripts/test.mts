@@ -52,6 +52,8 @@ console.log("\n── 3) System settings (req #1 contact email, #2 WhatsApp) ─
 ok("WhatsApp number 94742352670", seed.SETTINGS.whatsapp_number === "94742352670");
 ok("FormSubmit email itk200712@gmail.com", seed.SETTINGS.contact_email_1 === "itk200712@gmail.com");
 ok("Years of service 50", seed.SETTINGS.years_of_service === 50 || seed.SETTINGS.years_of_service === "50");
+ok("Hero images 5ක් (auto-change slideshow)", Array.isArray(seed.SETTINGS.hero_images) && seed.SETTINGS.hero_images.length === 5, `got ${seed.SETTINGS.hero_images?.length}`);
+ok("Hero image files exist (hero-1..5)", seed.SETTINGS.hero_images.every((h: string) => h.startsWith("/images/hero/hero-")));
 
 console.log("\n── 4) Login logic (req #3 NIC login, #7 password display) ──");
 ok("nicToEmail('931234567v')", auth.nicToEmail("931234567v") === "931234567v@members.mpcs.lk");
@@ -99,6 +101,7 @@ for (const t of ["profiles", "login_lookup", "business_units", "business_service
 ok("seed.sql has superadmin user", seedSql.includes("superadmin@members.mpcs.lk"));
 ok("seed.sql has fuel prices", seedSql.includes("('petrol92', 414)"));
 ok("seed.sql has WhatsApp setting", seedSql.includes("'94742352670'"));
+ok("seed.sql has hero_images JSON", seedSql.includes("hero_images") && seedSql.includes("/images/hero/hero-5.jpg"));
 
 console.log(`\n══════════════════════════════════════`);
 console.log(`  RESULT: ${pass} passed, ${fail} failed`);

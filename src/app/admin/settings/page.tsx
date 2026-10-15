@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { useState } from "react";
-import { Check, Mail, MessageCircle, Save, Settings } from "lucide-react";
+import { Check, Image as ImageIcon, Mail, MessageCircle, Plus, RefreshCw, Save, Settings, Trash2 } from "lucide-react";
 import { AdminTopbar, dbUpdate, useNotice } from "@/components/admin";
 import { SETTINGS } from "@/lib/seed";
 
@@ -15,6 +15,29 @@ export default function AdminSettingsPage() {
   const [years, setYears] = useState(String(SETTINGS.years_of_service));
   const [email1, setEmail1] = useState(SETTINGS.contact_email_1);
   const [email2, setEmail2] = useState(SETTINGS.contact_email_2);
+  const [heroImages, setHeroImages] = useState<string[]>([...SETTINGS.hero_images]);
+  const [newImg, setNewImg] = useState("");
+
+  const addImage = () => {
+    const v = newImg.trim();
+    if (!v) return;
+    if (heroImages.length >= 10) {
+      show("⚠ Hero images උපරිම 10ක් දක්වායි");
+      return;
+    }
+    setHeroImages((xs) => [...xs, v]);
+    setNewImg("");
+  };
+
+  const moveImage = (i: number, dir: -1 | 1) => {
+    setHeroImages((xs) => {
+      const j = i + dir;
+      if (j < 0 || j >= xs.length) return xs;
+      const copy = [...xs];
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+      return copy;
+    });
+  };
 
   return (
     <div>
@@ -50,6 +73,86 @@ export default function AdminSettingsPage() {
             <p className="text-slate-400 text-[10.5px] mt-1.5">
               Configure the operational years of service displayed on the live homepage statistics counter.
             </p>
+          </div>
+        </section>
+
+        {/* hero background slideshow */}
+        <section className="border-t border-slate-100 pt-7">
+          <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2.5">
+            <ImageIcon size={20} className="text-amber-600" /> Hero Background Images (Homepage Slideshow)
+          </h2>
+          <p className="text-slate-500 text-[12.5px] mt-1.5 leading-relaxed">
+            මුල් පිටුවේ hero background එකේ පෙන්වන ඡායාරූප (5ක් හෝ ඊට වැඩි). ඡායාරූප ස්වයංක්‍රීයව animation එකක් සමඟ
+            මාරු වේ — පිළිවෙල වෙනස් කිරීමට ↑ ↓ භාවිතා කරන්න (උපරිම 10ක්).
+          </p>
+
+          <div className="space-y-2.5 mt-4">
+            {heroImages.map((src, i) => (
+              <div key={`${src}-${i}`} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5">
+                <div className="w-24 h-14 rounded-lg overflow-hidden bg-slate-200 shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                </div>
+                <input
+                  value={src}
+                  onChange={(e) =>
+                    setHeroImages((xs) => xs.map((x, j) => (j === i ? e.target.value : x)))
+                  }
+                  className="field !py-2 !text-[12px] flex-1"
+                />
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    className="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-500 flex items-center justify-center"
+                    onClick={() => moveImage(i, -1)}
+                    aria-label="Move up"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-500 flex items-center justify-center"
+                    onClick={() => moveImage(i, 1)}
+                    aria-label="Move down"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    className="w-8 h-8 rounded-lg border border-red-200 bg-white text-red-600 flex items-center justify-center"
+                    onClick={() => setHeroImages((xs) => xs.filter((_, j) => j !== i))}
+                    aria-label="Delete"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2.5 mt-4">
+            <input
+              value={newImg}
+              onChange={(e) => setNewImg(e.target.value)}
+              className="field flex-1 min-w-[240px]"
+              placeholder="/images/hero/hero-6.jpg හෝ https://... image URL එකක්"
+            />
+            <button type="button" className="btn btn-primary" onClick={addImage}>
+              <Plus size={16} /> Add Hero Image
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setHeroImages([...SETTINGS.hero_images])}
+            >
+              <RefreshCw size={15} /> Reset to Default (5)
+            </button>
+          </div>
+
+          <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-[11.5px] text-amber-900 mt-4">
+            💡 ඡායාරූප උඩුගත කිරීමට: <strong>/public/images/hero/</strong> folder එකට image එක දාලා උඩ path එක ලියන්න
+            (උදා: <code>/images/hero/hero-6.jpg</code>). Slideshow එක තත්පර 6කට වරක් crossfade + zoom animation
+            එකක් සමඟ මාරු වේ.
           </div>
         </section>
 
@@ -121,10 +224,12 @@ Message: Customer inquiry text...`}
           <button
             className="btn btn-primary"
             onClick={async () => {
-              const err = await dbUpdate("system_settings", { key: "whatsapp_number" }, { value: wa }) ??
+              const err = (await dbUpdate("system_settings", { key: "whatsapp_number" }, { value: wa })) ??
                 (await dbUpdate("system_settings", { key: "years_of_service" }, { value: years })) ??
-                (await dbUpdate("system_settings", { key: "contact_email_1" }, { value: email1 }));
-              show(err ? `⚠ ${err}` : "✅ Settings saved");
+                (await dbUpdate("system_settings", { key: "contact_email_1" }, { value: email1 })) ??
+                (await dbUpdate("system_settings", { key: "contact_email_2" }, { value: email2 })) ??
+                (await dbUpdate("system_settings", { key: "hero_images" }, { value: JSON.stringify(heroImages) }));
+              show(err ? `⚠ ${err}` : `✅ Settings saved — Hero images ${heroImages.length}ක් සුරැකුණා`);
             }}
           >
             <Save size={16} /> Save Settings

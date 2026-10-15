@@ -117,8 +117,23 @@ export async function getSettings(): Promise<SiteSettings> {
       voters_total: Number(map.get("voters_total") ?? SETTINGS.voters_total),
       members_files_count: Number(map.get("members_files_count") ?? SETTINGS.members_files_count),
       voters_files_count: Number(map.get("voters_files_count") ?? SETTINGS.voters_files_count),
+      hero_images: parseHeroImages(map.get("hero_images")),
     };
   }, SETTINGS);
+}
+
+/** system_settings.hero_images = JSON string[] (max 10) */
+function parseHeroImages(raw: string | undefined): string[] {
+  if (!raw) return SETTINGS.hero_images;
+  try {
+    const arr = JSON.parse(raw) as unknown;
+    if (Array.isArray(arr) && arr.length > 0) {
+      return arr.filter((x): x is string => typeof x === "string" && x.trim() !== "").slice(0, 10);
+    }
+  } catch {
+    /* corrupt JSON → seed fallback */
+  }
+  return SETTINGS.hero_images;
 }
 
 export async function getMemberRows(): Promise<{ rows: MemberRow[]; files: DataFile[] }> {

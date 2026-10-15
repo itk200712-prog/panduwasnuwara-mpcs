@@ -183,6 +183,8 @@ export interface SiteSettings {
   voters_total: number;
   members_files_count: number;
   voters_files_count: number;
+  /** hero background slideshow images (5ක්+ auto-change, admin settings වලින්) */
+  hero_images: string[];
 }
 
 export interface HeroStat {

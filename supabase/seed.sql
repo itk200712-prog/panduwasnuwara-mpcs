@@ -15,7 +15,8 @@ insert into public.system_settings (key, value) values
   ('members_total', '52964'),
   ('voters_total', '2359'),
   ('members_files_count', '52'),
-  ('voters_files_count', '1')
+  ('voters_files_count', '1'),
+  ('hero_images', '["/images/hero/hero-1.jpg","/images/hero/hero-2.jpg","/images/hero/hero-3.jpg","/images/hero/hero-4.jpg","/images/hero/hero-5.jpg"]')
 on conflict (key) do update set value = excluded.value;
 
 -- ---------------------------------------------------------------------------

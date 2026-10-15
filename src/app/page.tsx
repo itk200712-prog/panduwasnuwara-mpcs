@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, BadgeCheck, CalendarDays, Newspaper, Phone, Send, ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { HeroSlideshow } from "@/components/hero-slideshow";
 import { SectionHead, StatsBand, PersonCard } from "@/components/site-sections";
 import { HomeClientBits } from "@/components/home-client";
 import { getBoard, getBusinesses, getNews, getSettings } from "@/lib/data";
@@ -27,9 +28,11 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      {/* HERO */}
-      <section className="hero-dark text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+      {/* HERO — background images auto-change (admin → System Settings) */}
+      <section className="hero-dark relative overflow-hidden text-white">
+        <HeroSlideshow images={settings.hero_images} />
+        <div className="hero-overlay" />
+        <div className="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="flex items-center gap-2 text-[11px] font-bold tracking-[0.22em] uppercase text-amber-300">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400" /> Est. 1976 — 50+ Years of Trust
           </div>
@@ -39,7 +42,7 @@ export default async function HomePage() {
           <p className="mt-2 text-lg sm:text-2xl text-indigo-100 font-semibold">
             Panduwasnuwara New Multi Purpose Co-Operative Society LTD
           </p>
-          <p className="mt-5 text-slate-300 max-w-2xl leading-relaxed text-[15px]">
+          <p className="mt-5 text-slate-200 max-w-2xl leading-relaxed text-[15px]">
             ග්‍රාමීය බැංකු, පාරිභෝගික භාණ්ඩ, නිෂ්පාදන නියෝජිතායතන සහ ඉන්ධන සැපයුම එක් වහලක් යටතේ සපයන
             විශ්වාසනීය සමූපකාර ආයතනයකි.
           </p>
